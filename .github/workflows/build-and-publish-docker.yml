@@ -19,6 +19,11 @@ on:
         description: 'Lune Version'
         required: true
         default: '0.9.0'
+      push_latest:
+        description: 'Push with :latest tag'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build-and-publish:
@@ -49,7 +54,9 @@ jobs:
       with:
         context: .
         push: true
-        tags: noahwillcrowdocker/roblox-ts-dev:${{ steps.generate_tag.outputs.IMAGE_TAG }}
+        tags: |
+          noahwillcrowdocker/roblox-ts-dev:${{ steps.generate_tag.outputs.IMAGE_TAG }}
+          ${{ github.event.inputs.push_latest && 'noahwillcrowdocker/roblox-ts-dev:latest' || '' }}
         build-args: |
           TS_VERSION=${{ github.event.inputs.ts_version }}
           RBXTS_VERSION=${{ github.event.inputs.rbxts_version }}
