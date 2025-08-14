@@ -1,0 +1,57 @@
+name: Build and Publish Docker Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      ts_version:
+        description: 'TypeScript Version'
+        required: true
+        default: '5.5.3'
+      rbxts_version:
+        description: 'roblox-ts Version'
+        required: true
+        default: '3.0.0'
+      rojo_version:
+        description: 'Rojo Version'
+        required: true
+        default: '7.4.4'
+      lune_version:
+        description: 'Lune Version'
+        required: true
+        default: '0.9.0'
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # To publish to GitHub Packages
+      
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: noahwillcrowdocker
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Generate Image Tag
+      id: generate_tag
+      run: |
+        IMAGE_TAG="rbxts${{ github.event.inputs.rbxts_version }}-ts${{ github.event.inputs.ts_version }}-lune${{ github.event.inputs.lune_version }}-rojo${{ github.event.inputs.rojo_version }}"
+        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        echo "Generated Image Tag: $IMAGE_TAG"
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: noahwillcrowdocker/roblox-ts-dev:${{ steps.generate_tag.outputs.IMAGE_TAG }}
+        build-args: |
+          TS_VERSION=${{ github.event.inputs.ts_version }}
+          RBXTS_VERSION=${{ github.event.inputs.rbxts_version }}
+          ROJO_VERSION=${{ github.event.inputs.rojo_version }}
+          LUNE_VERSION=${{ github.event.inputs.lune_version }}
